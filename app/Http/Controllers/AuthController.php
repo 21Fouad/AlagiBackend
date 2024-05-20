@@ -10,6 +10,7 @@ use App\Models\Contact;
 use App\Models\Favorite;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\DashboardNotification;
 use App\Models\OrderItem;
 use App\Models\Donation;
 use App\Models\Feedback;
@@ -657,6 +658,14 @@ class AuthController extends Controller
                         'payment_method' => $validated['paymentMethod'],
                     ]);
                 }
+
+                // Create a notification for the new order
+                DashboardNotification::create([
+                    'order_id' => $order->id,
+                    'is_read' => false,
+                    'type' => 'order',
+                ]);
+
                 DB::commit();
 
                 if ($validated['paymentMethod'] === 'card') {
@@ -666,9 +675,18 @@ class AuthController extends Controller
                     $paymentKey = $this->getPaymentKey($authToken, $paymobOrderId, $totalPrice);
 
                     $paymentUrl = "https://accept.paymob.com/api/acceptance/iframes/" . env('PAYMOB_IFRAME_ID') . "?payment_token=$paymentKey";
+
+                    // Store the order ID in the session or database to link with the payment later
+                    session(['pending_order_id' => $order->id]);
+
                     return response()->json(['paymentUrl' => $paymentUrl]);
                 } else {
-                    // Optionally clear the user's cart
+                    // For cash payment, decrement stock and clear the cart
+                    foreach ($validated['cartItems'] as $item) {
+                        $product = Medicine::find($item['product_id']);
+                        $product->decrement('stock', $item['quantity']);
+                    }
+
                     Cart::where('user_id', $user->id)->delete();
                     return response()->json(['message' => 'Order placed successfully']);
                 }
@@ -678,13 +696,14 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Order placement failed'], 500);
             }
         }
+
         public function handleCallback(Request $request)
         {
             \Log::info($request->all());
 
             // Example of verifying payment (You should replace this with actual verification logic)
             $paymentStatus = $request->input('status');
-            $orderId = $request->input('order_id'); // Ensure you send this from Paymob
+            $orderId = session('pending_order_id'); // Retrieve the order ID stored in the session
 
             // Find the order by ID
             $order = Order::find($orderId);
@@ -695,10 +714,18 @@ class AuthController extends Controller
             }
 
             if ($paymentStatus === 'SUCCESS') {
-                // Update order status to complete or any other logic
+                // Update order status to complete
                 $order->update(['status' => 'completed']);
 
-                // Optionally, clear the user's cart
+                // Decrease stock for each item
+                foreach ($order->items as $item) {
+                    $product = Medicine::where('name', $item->medicine_name)->first();
+                    if ($product) {
+                        $product->decrement('stock', $item->quantity);
+                    }
+                }
+
+                // Clear the user's cart
                 Cart::where('user_id', $order->user_id)->delete();
 
                 return response()->json(['message' => 'Payment successful, order processed']);
@@ -708,6 +735,7 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Payment failed']);
             }
         }
+
         public function checkPaymentStatus($paymentId)
         {
             // Your logic to check payment status using $paymentId
@@ -720,6 +748,7 @@ class AuthController extends Controller
 
             return response()->json(['status' => $payment->status]);
         }
+
 
 
         public function initiateDonation(Request $request)
