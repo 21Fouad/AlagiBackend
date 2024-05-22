@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -40,14 +42,15 @@ Route::post('/store-rare-medicine', [AuthController::class, 'storeRareMedicine']
 Route::post('/upload-prescription', [AuthController::class, 'uploadPrescription']);
 Route::post('/upload-medicalTest', [AuthController::class, 'uploadMedicalTest']);
 
-Route::get('/products', [AuthController::class, 'product']);
-Route::get('/products/{product}', [AuthController::class, 'show']);
+Route::get('/medicines', [AuthController::class, 'product']);
+Route::get('/medicines/{product}', [AuthController::class, 'show']);
+Route::get('/medicines/category/{categorySlug}', [AuthController::class, 'getByCategory']);
+
 Route::post('/favorites/add/{productId}', [AuthController::class, 'add'])->middleware('auth:sanctum');
 Route::get('/favorites', [AuthController::class, 'listFavorites'])->middleware('auth:sanctum');
 Route::delete('/favorites/remove/{id}', [AuthController::class, 'removeFromFavorites'])->middleware('auth:sanctum');
 Route::delete('/favorites/clear', [AuthController::class, 'clearAll'])->middleware('auth:sanctum');
 Route::post('/create-payment-intent', [AuthController::class, 'createPaymentIntent']);
-Route::get('/products/category/{categorySlug}', [AuthController::class, 'getByCategory']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -78,3 +81,57 @@ Route::get('/test', function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+
+
+Route::post('/login', [DashboardController::class, 'login']);
+Route::post('/validate-token', [DashboardController::class, 'validateToken']);
+Route::post('/logout', [DashboardController::class, 'logout'])->middleware('auth:sanctum');
+
+// Dashboard statistics
+Route::get('/dashboard/users', [DashboardController::class, 'countUsers']);
+Route::get('/dashboard/medicines', [DashboardController::class, 'countMedicines']);
+Route::get('/dashboard/orders', [DashboardController::class, 'countOrders']);
+
+// User routes
+Route::get('/users', [DashboardController::class, 'index']);
+Route::put('/users/{user}', [DashboardController::class, 'update']);
+Route::delete('/users/{user}', [DashboardController::class, 'destroy']);
+
+// Order routes
+Route::get('/dorders', [DashboardController::class, 'indexOrders']);
+Route::get('/dorders/{id}', [DashboardController::class, 'showOrderDetails']);
+Route::put('/dorders/{order}', [DashboardController::class, 'updateOrders']);
+Route::delete('/dorders/{order}', [DashboardController::class, 'destroyOrders']);
+
+// Order items routes
+Route::put('/order-items/{id}', [DashboardController::class, 'updateOrderItem']);
+
+// Product management routes
+Route::get('/products', [DashboardController::class, 'indexProducts']);
+Route::get('/products/{product}', [DashboardController::class, 'showProducts']);
+Route::post('/products', [DashboardController::class, 'storeProducts']);
+Route::put('/products/{id}', [DashboardController::class, 'updateProducts']);
+Route::delete('/products/{product}', [DashboardController::class, 'destroyProducts']);
+
+// Rare Medicine Requests management routes
+Route::get('/rare-medicine-requests', [DashboardController::class, 'indexRareMedicine']);
+Route::delete('/rare-medicine-requests/{id}', [DashboardController::class, 'destroyRareMedicine']);
+
+
+// Feedback management routes
+Route::get('/feedbacks', [DashboardController::class, 'indexFeedback']);
+Route::delete('/feedbacks/{id}', [DashboardController::class, 'destroyFeedback']);
+
+// Contact management routes
+Route::get('/contacts', [DashboardController::class, 'indexContact']);
+Route::delete('/contacts/{id}', [DashboardController::class, 'destroyContact']);
+
+Route::get('/notifications', [DashboardController::class, 'indexNotification']);
+Route::get('/notifications/{id}', [DashboardController::class, 'showNotification']);
+Route::patch('notifications/{id}/unread', [DashboardController::class, 'markAsUnread']);
+Route::patch('notifications/{id}/read', [DashboardController::class, 'markAsRead']);
+Route::patch('notifications/mark-all-read', [DashboardController::class, 'markAllAsRead']);
+Route::patch('notifications/mark-all-unread', [DashboardController::class, 'markAllAsUnread']);
+Route::delete('notifications/{id}', [DashboardController::class, 'deleteNotification']);

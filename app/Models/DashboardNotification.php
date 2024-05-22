@@ -8,7 +8,7 @@ class DashboardNotification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'is_read'];
+    protected $fillable = ['order_id', 'is_read', 'message', 'type'];
 
     // Specify the table name
     protected $table = 'notifications';
@@ -18,3 +18,4 @@ class DashboardNotification extends Model
         return $this->belongsTo(Order::class);
     }
 }
+
