@@ -135,3 +135,10 @@ Route::patch('notifications/{id}/read', [DashboardController::class, 'markAsRead
 Route::patch('notifications/mark-all-read', [DashboardController::class, 'markAllAsRead']);
 Route::patch('notifications/mark-all-unread', [DashboardController::class, 'markAllAsUnread']);
 Route::delete('notifications/{id}', [DashboardController::class, 'deleteNotification']);
+
+
+Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData']);
+Route::get('/dashboard/most-sold-medicines', [DashboardController::class, 'getMostSoldMedicines']);
+Route::get('/dashboard/user-registrations', [DashboardController::class, 'getUserRegistrationsOverTime']);
+
+

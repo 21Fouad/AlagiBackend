@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 
 class DashboardController extends Controller
@@ -36,6 +37,11 @@ class DashboardController extends Controller
             return response()->json(['error' => __('messages.no_account')], 404);
         }
 
+        // Check if the user is an admin
+        if (!$user->is_admin) {  // Assuming there is an `is_admin` column in your users table
+            return response()->json(['error' => __('messages.not_authorized')], 403);
+        }
+
         // Check if the provided password matches the hashed password
         if (!Hash::check($request->password, $user->password)) {
             return response()->json(['error' => __('messages.incorrect_password')], 401);
@@ -47,6 +53,7 @@ class DashboardController extends Controller
         // Return a response with the token
         return response()->json(['message' => __('messages.login_success'), 'token' => $token], 200);
     }
+
 
 
     public function validateToken(Request $request)
@@ -349,6 +356,52 @@ class DashboardController extends Controller
         $notification->delete();
         return response()->json(['message' => 'Notification deleted']);
     }
+
+
+
+    public function getChartData()
+    {
+        $userCount = User::count();
+        $orderCount = Order::count();
+        $productCount = Product::count();
+
+        // Example: Monthly orders count
+        $monthlyOrders = Order::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->get();
+
+        return response()->json([
+            'userCount' => $userCount,
+            'orderCount' => $orderCount,
+            'productCount' => $productCount,
+            'monthlyOrders' => $monthlyOrders
+        ]);
+    }
+
+    public function getUserRegistrationsOverTime()
+    {
+        $registrations = User::select(
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count')
+        )
+        ->groupBy('date')
+        ->orderBy('date', 'ASC')
+        ->get();
+
+        return response()->json($registrations);
+    }
+
+    public function getMostSoldMedicines()
+    {
+        $mostSoldMedicines = OrderItem::select('medicine_name', DB::raw('count(*) as total'))
+            ->groupBy('medicine_name')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        return response()->json($mostSoldMedicines);
+    }
+
 
 }
 
