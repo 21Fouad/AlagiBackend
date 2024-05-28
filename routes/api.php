@@ -93,6 +93,7 @@ Route::post('/logout', [DashboardController::class, 'logout'])->middleware('auth
 Route::get('/dashboard/users', [DashboardController::class, 'countUsers']);
 Route::get('/dashboard/medicines', [DashboardController::class, 'countMedicines']);
 Route::get('/dashboard/orders', [DashboardController::class, 'countOrders']);
+Route::get('/dashboard/total-sales-revenue', [DashboardController::class, 'getTotalSalesRevenue']);
 
 // User routes
 Route::get('/users', [DashboardController::class, 'index']);
@@ -140,5 +141,5 @@ Route::delete('notifications/{id}', [DashboardController::class, 'deleteNotifica
 Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData']);
 Route::get('/dashboard/most-sold-medicines', [DashboardController::class, 'getMostSoldMedicines']);
 Route::get('/dashboard/user-registrations', [DashboardController::class, 'getUserRegistrationsOverTime']);
-
+Route::get('/dashboard/sales-revenue', [DashboardController::class, 'getSalesRevenue']);
 

@@ -106,6 +106,13 @@ class DashboardController extends Controller
         return response()->json(['count' => $count]);
     }
 
+    public function getTotalSalesRevenue()
+    {
+        $totalSalesRevenue = DB::table('orders')
+            ->sum('total_price');
+
+        return response()->json(['total_sales_revenue' => $totalSalesRevenue]);
+    }
 
     public function index()
     {
@@ -154,7 +161,8 @@ class DashboardController extends Controller
     public function destroyOrders(Order $order)
     {
         $order->delete();
-        return response()->json(['message' => 'Order deleted successfully'], 204);
+
+        return response()->json(['message' => 'Order deleted successfully'], 200);
     }
 
     public function showOrderDetails($id)
@@ -402,6 +410,16 @@ class DashboardController extends Controller
         return response()->json($mostSoldMedicines);
     }
 
+    public function getSalesRevenue()
+    {
+        $salesRevenue = DB::table('orders')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_price) as total_revenue'))
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return response()->json($salesRevenue);
+    }
 
 }
 
