@@ -85,7 +85,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 
-Route::post('/login', [DashboardController::class, 'login']);
+Route::post('/dashlogin', [DashboardController::class, 'login']);
 Route::post('/validate-token', [DashboardController::class, 'validateToken']);
 Route::post('/logout', [DashboardController::class, 'logout'])->middleware('auth:sanctum');
 
