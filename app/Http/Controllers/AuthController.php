@@ -389,15 +389,6 @@ class AuthController extends Controller
         }
 
 
-        public function product()
-        {
-            $medicines = Medicine::paginate(12);
-            foreach ($medicines as $medicine) {
-                $medicine->image_url = asset($medicine->image_url);
-            }
-
-            return response()->json($medicines);
-        }
 
 
         public function show($medicineId)
@@ -797,11 +788,50 @@ class AuthController extends Controller
             return response()->json($feedback);
         }
 
-        public function getByCategory($categorySlug)
+        public function product(Request $request)
         {
-            $products = Product::where('category', $categorySlug)->get();
+            $sort = $request->input('sort');
+
+            $query = Medicine::query();
+
+            if ($sort) {
+                switch ($sort) {
+                    case 'price_asc':
+                        $query->orderBy('price', 'asc');
+                        break;
+                    case 'price_desc':
+                        $query->orderBy('price', 'desc');
+                        break;
+                    case 'name_asc':
+                        $query->orderBy('name', 'asc');
+                        break;
+                    case 'name_desc':
+                        $query->orderBy('name', 'desc');
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            $medicines = $query->paginate(12); // Adjust pagination as needed
+
+            foreach ($medicines as $medicine) {
+                $medicine->image_url = asset($medicine->image_url);
+            }
+
+            return response()->json($medicines);
+        }
+
+        public function getByCategory(Request $request, $categorySlug)
+        {
+            $products = Product::where('category', $categorySlug)->paginate(12);
+            foreach ($products as $product) {
+                $product->image_url = asset($product->image_url);
+            }
             return response()->json($products);
         }
+
+
 
 
         public function uploadMedicalTest(Request $request) {
