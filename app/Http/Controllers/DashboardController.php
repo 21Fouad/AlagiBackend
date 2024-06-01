@@ -282,6 +282,34 @@ class DashboardController extends Controller
         return response()->json($feedbacks);
     }
 
+    // Existing methods for regular feedback management are assumed to be correct
+
+    public function getPinnedFeedbacks() {
+        $feedbacks = Feedback::where('is_pinned', true)->get();
+        return response()->json($feedbacks);
+    }
+
+    public function approveFeedback($id) {
+        $feedback = Feedback::find($id);
+        if ($feedback) {
+            $feedback->is_pinned = false;
+            $feedback->save();
+            return response()->json(['message' => 'Feedback approved successfully']);
+        }
+        return response()->json(['message' => 'Feedback not found'], 404);
+    }
+
+    public function ignoreFeedback($id) {
+        $feedback = Feedback::find($id);
+        if ($feedback) {
+            $feedback->delete();
+            return response()->json(['message' => 'Feedback ignored and deleted']);
+        }
+        return response()->json(['message' => 'Feedback not found'], 404);
+    }
+
+
+
     // Delete a feedback
     public function destroyFeedback($id) {
         try {

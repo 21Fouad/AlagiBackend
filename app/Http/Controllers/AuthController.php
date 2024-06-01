@@ -770,22 +770,35 @@ class AuthController extends Controller
 
         public function storeFeedback(Request $request)
         {
-            $validated = $request->validate([
-                'name' => 'required',
-                'email' => 'required|email',
+            // Validate the incoming request data
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
                 'feedback' => 'required|string',
-                'rating' => 'required|integer|min:1|max:5',
+                'rating' => 'required|integer|between:1,5',
             ]);
 
-            $feedback = Feedback::create($validated);
+            // Create a new feedback instance and set is_pinned to true
+            $feedback = new Feedback([
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'feedback' => $validatedData['feedback'],
+                'rating' => $validatedData['rating'],
+                'is_pinned' => true, // Feedback is initially 'pinned'
+            ]);
 
-            return response()->json(['message' => 'Feedback received', 'feedback' => $feedback], 201);
+            $feedback->save(); // Save the feedback to the database
+
+            return response()->json([
+                'message' => 'Feedback received and awaiting approval',
+                'feedback' => $feedback
+            ], 201);
         }
 
         public function index()
         {
-            $feedback = Feedback::all();
-            return response()->json($feedback);
+            $feedbacks = Feedback::where('is_pinned', false)->get();
+            return response()->json($feedbacks);
         }
 
         public function product(Request $request)
