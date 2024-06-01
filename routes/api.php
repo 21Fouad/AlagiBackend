@@ -125,8 +125,8 @@ Route::delete('/rare-medicine-requests/{id}', [DashboardController::class, 'dest
 Route::get('/pinnedFeedbacks', [DashboardController::class, 'getPinnedFeedbacks']);
 Route::post('/approveFeedback/{id}', [DashboardController::class, 'approveFeedback']);
 Route::delete('/ignoreFeedback/{id}', [DashboardController::class, 'ignoreFeedback']);
-Route::get('/feedbacks', [DashboardController::class, 'indexFeedback']); // Existing route for fetching regular feedbacks
-Route::delete('/feedbacks/{id}', [DashboardController::class, 'destroyFeedback']); // Existing route for deleting feedback
+Route::get('/feedbacks', [DashboardController::class, 'indexFeedback']);
+Route::delete('/feedbacks/{id}', [DashboardController::class, 'destroyFeedback']);
 
 
 // Contact management routes
