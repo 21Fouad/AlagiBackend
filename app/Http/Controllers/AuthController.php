@@ -34,8 +34,11 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class AuthController extends Controller
 {
@@ -844,32 +847,38 @@ class AuthController extends Controller
             return response()->json($products);
         }
 
-
-
-
         public function uploadMedicalTest(Request $request) {
             $request->validate([
-                'file' => 'required|file|max:10240',
+                'file' => 'sometimes|file|max:10240',
+                'calciumLevel' => 'sometimes|numeric',
             ]);
-
-            $image = $request->file('file');
-            $imagePath = $image->store('uploads', 'public');
 
             $pythonExecutable = "C:\\Users\\DELL\\venv\\Scripts\\python.exe";
             $scriptPath = 'E:\\Graduation Project\\Pharmacy-Back-End\\public\\scripts\\analyze_lab_results.py';
-            $absoluteImagePath = storage_path('app/public/' . $imagePath);
+            $dataset_path = "E:\\Graduation Project\\Pharmacy-Back-End\\public\\scripts\\Calcium.xlsx";
+            $absoluteImagePath = null;
 
-            // Ensure the PATH includes the directory for Tesseract OCR
-            $process = new Process([
-                $pythonExecutable,
-                $scriptPath,
-                $absoluteImagePath
-            ], null, ['PATH' => getenv('PATH') . ';C:\\Program Files\\Tesseract-OCR']);
+            if ($request->hasFile('file')) {
+                $image = $request->file('file');
+                $imagePath = $image->store('uploads', 'public');
+                $absoluteImagePath = storage_path('app/public/' . $imagePath);
+            }
 
+            $extracted_value = $request->input('calciumLevel');
+
+            // Run the Python script with either the image path or the manually entered calcium level
+            $processArguments = [$pythonExecutable, $scriptPath, $dataset_path];
+            if ($absoluteImagePath) {
+                array_push($processArguments, $absoluteImagePath);
+            } else {
+                array_push($processArguments, '--calcium-level', $extracted_value);
+            }
+
+            $process = new Process($processArguments, null, ['PATH' => getenv('PATH') . ';C:\\Program Files\\Tesseract-OCR']);
             $process->run();
 
             if (!$process->isSuccessful()) {
-                \Log::error("Error executing Python script: " . $process->getErrorOutput());
+                Log::error("Error executing Python script: " . $process->getErrorOutput());
                 throw new ProcessFailedException($process);
             }
 

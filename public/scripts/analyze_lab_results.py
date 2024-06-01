@@ -30,7 +30,6 @@ def compare_with_dataset(extracted_value, dataset, result_mapping):
     ref_range = dataset['Calcium, Total Reference Range'].iloc[0]
     lower_bound, upper_bound = map(float, ref_range.split('-'))
 
-    # Calculating the minimum absolute difference to find the nearest value in the 'Total Calcium' column
     dataset['Difference'] = dataset['Calcium, Total'].apply(lambda x: abs(x - extracted_value))
     nearest_row = dataset.loc[dataset['Difference'].idxmin()]
 
@@ -46,36 +45,40 @@ def compare_with_dataset(extracted_value, dataset, result_mapping):
 
     result_code = result_mapping[condition]
 
-    # Identify the condition associated with the nearest result value
     nearest_condition = None
     for key, value in result_mapping.items():
-        if value == nearest_row['Result'].item():
+        if value == int(nearest_row['Result']):
             nearest_condition = key
             break
 
     return {
         "condition": condition,
         "status": status,
-        "reference_range": ref_range,
-        "result_code": result_code,
-        "extracted_value": extracted_value,
-        "difference": nearest_row['Difference'].item(),
-        "nearest_result_value": nearest_row['Result'].item(),
+        "reference_range": str(ref_range),
+        "result_code": int(result_code),
+        "extracted_value": float(extracted_value),
+        "difference": float(nearest_row['Difference']),
+        "nearest_result_value": int(nearest_row['Result']),
         "nearest_condition": nearest_condition or "Condition not mapped"
     }
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python script.py <image_path>")
+    if len(sys.argv) < 3:
+        print("Usage: python script.py <dataset_path> <image_path or --calcium-level <value>>")
         sys.exit(1)
 
-    image_path = sys.argv[1]
-    dataset_path = "E:\\Graduation Project\\Pharmacy-Back-End\\public\\scripts\\Calcium.xlsx"
+    dataset_path = sys.argv[1]
+    manual_input = False
 
-    # Read the dataset
+    if sys.argv[2] == '--calcium-level':
+        extracted_value = float(sys.argv[3])
+        manual_input = True
+    else:
+        image_path = sys.argv[2]
+        extracted_value = extract_calcium_value(image_path)
+
     dataset = pd.read_excel(dataset_path)
 
-    # Result column condition mapping
     Calcium_Result_Column_Mapping = {
         'hypoalbuminemia': 1,
         'Hypocalcemia': 2,
@@ -86,12 +89,7 @@ if __name__ == "__main__":
         'Normal': 0,
     }
 
-    # Extract the calcium value from the image
-    extracted_value = extract_calcium_value(image_path)
-
-    # Compare with dataset and find the nearest value and condition
     results = compare_with_dataset(extracted_value, dataset, Calcium_Result_Column_Mapping)
 
-    # Print the results as JSON
     json_results = json.dumps(results, indent=4)
     print(json_results)

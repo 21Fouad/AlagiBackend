@@ -10,6 +10,7 @@
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "phpoffice/phpspreadsheet": "^2.1",
         "pusher/pusher-php-server": "^7.2",
         "stripe/stripe-php": "^13.16",
         "symfony/process": "^6.4",
