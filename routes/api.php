@@ -64,8 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/feedback', [AuthController::class, 'storeFeedback']);
-    Route::get('/feedback', [AuthController::class, 'index']);
 });
+Route::get('/feedback', [AuthController::class, 'index']);
+
 
 
 Route::post('/checkout', [AuthController::class, 'checkout'])->middleware('auth:sanctum');
