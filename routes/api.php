@@ -39,8 +39,8 @@ Route::post('/user/update', [AuthController::class, 'update'])->middleware('auth
 Route::post('/contact/save', [AuthController::class, 'store']);
 Route::post('/store-rare-medicine', [AuthController::class, 'storeRareMedicine'])->middleware('auth:sanctum');
 
-Route::post('/upload-prescription', [AuthController::class, 'uploadPrescription']);
-Route::post('/upload-medicalTest', [AuthController::class, 'uploadMedicalTest']);
+Route::post('/upload-prescription', [AuthController::class, 'uploadPrescription'])->middleware('auth:sanctum');
+Route::post('/upload-medicalTest', [AuthController::class, 'uploadMedicalTest'])->middleware('auth:sanctum');
 
 Route::get('/medicines', [AuthController::class, 'product']);
 Route::get('/medicines/{product}', [AuthController::class, 'show']);
