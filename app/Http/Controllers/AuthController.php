@@ -44,59 +44,60 @@ class AuthController extends Controller
 {
 
     public function register(Request $request)
-        {
-            // Define validation rules
-            $rules = [
-                'fullname' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
-                'email' => 'required|email|ends_with:@gmail.com|unique:users,email',
-                'phone' => 'required|digits:11',
-                'password' => 'required|min:8|confirmed',
-            ];
+    {
+        // Define validation rules
+        $rules = [
+            'fullname' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
+            'email' => 'required|email|ends_with:@gmail.com|unique:users,email',
+            'phone' => 'required|digits:11',
+            'password' => 'required|min:8|confirmed',
+        ];
 
-            // Define custom messages for each validation rule
-            $customMessages = [
-                'fullname.required' => 'Full name is required.',
-                'fullname.regex' => 'Full name must contain letters and spaces only.',
-                'email.required' => 'Email is required.',
-                'email.email' => 'Email must be a valid email address.',
-                'email.ends_with' => 'Email must end with @gmail.com.',
-                'email.unique' => 'This email address is already in use.',
-                'phone.required' => 'Phone number is required.',
-                'phone.digits' => 'Phone number must be exactly 11 digits long.',
-                'password.required' => 'Password is required.',
-                'password.min' => 'Password must be at least 8 characters long.',
-                'password.confirmed' => 'Passwords do not match.',
-            ];
+        // Define custom messages for each validation rule
+        $customMessages = [
+            'fullname.required' => __('messages.fullname_required'),
+            'fullname.regex' => __('messages.fullname_regex'),
+            'email.required' => __('messages.email_required'),
+            'email.email' => __('messages.email_email'),
+            'email.ends_with' => __('messages.email_ends_with'),
+            'email.unique' => __('messages.email_unique'),
+            'phone.required' => __('messages.phone_required'),
+            'phone.digits' => __('messages.phone_digits'),
+            'password.required' => __('messages.password_required'),
+            'password.min' => __('messages.password_min'),
+            'password.confirmed' => __('messages.password_confirmed'),
+        ];
 
-            // Perform validation
-            $validator = Validator::make($request->all(), $rules, $customMessages);
+        // Perform validation
+        $validator = Validator::make($request->all(), $rules, $customMessages);
 
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 400);
-            }
-
-            // Generate OTP and set expiration
-            $otp = rand(100000, 999999);
-            $expiresAt = now()->addMinutes(10);
-
-            // Prepare user data for caching or further processing
-            $userData = [
-                'name' => $request->fullname,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => $request->password, // Remember to hash the password
-            ];
-
-            // Cache user data along with the OTP
-            $cacheKey = 'otp_verification_' . $request->email;
-            Cache::put($cacheKey, ['user' => $userData, 'otp' => $otp], $expiresAt);
-
-            // Send OTP via email
-            Notification::route('mail', $request->email)->notify(new OtpNotification($otp));
-
-            // Respond with a success message
-            return response()->json(['message' => 'OTP sent to email. Please verify to complete registration.']);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
         }
+
+        // Generate OTP and set expiration
+        $otp = rand(100000, 999999);
+        $expiresAt = now()->addMinutes(10);
+
+        // Prepare user data for caching or further processing
+        $userData = [
+            'name' => $request->fullname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password), // Hash the password
+        ];
+
+        // Cache user data along with the OTP
+        $cacheKey = 'otp_verification_' . $request->email;
+        Cache::put($cacheKey, ['user' => $userData, 'otp' => $otp], $expiresAt);
+
+        // Send OTP via email
+        Notification::route('mail', $request->email)->notify(new OtpNotification($otp));
+
+        // Respond with a success message
+        return response()->json(['message' => __('messages.otp_sent')]);
+    }
+
 
     public function resendOtp(Request $request)
         {
