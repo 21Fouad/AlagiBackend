@@ -84,7 +84,7 @@ class AuthController extends Controller
             'name' => $request->fullname,
             'email' => $request->email,
             'phone' => $request->phone,
-            'password' => Hash::make($request->password), // Hash the password
+            'password' =>$request->password, // Hash the password
         ];
 
         // Cache user data along with the OTP
